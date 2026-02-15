@@ -1684,6 +1684,54 @@ void RenderDevice::Flip()
    #endif
 }
 
+void RenderDevice::ResetBuffers() {
+   #if (BX_PLATFORM_LINUX || BX_PLATFORM_BSD) && defined(ENABLE_BGFX)
+   if (SDL_GetCurrentVideoDriver() == "wayland"s && m_outputWnd.size() > 1)
+   {
+      for (size_t i = 1; i < m_outputWnd.size(); ++i)
+      {
+         VPX::Window* wnd = m_outputWnd[i];
+         if (wnd && wnd->IsVisible())
+         {
+            RenderTarget* currentRT = wnd->GetBackBuffer();
+            if (currentRT)
+            {
+               // Destroy and recreate the framebuffer to ensure it's synchronized with Wayland
+               bgfx::FrameBufferHandle oldFbh = currentRT->GetCoreFrameBuffer();
+               if (bgfx::isValid(oldFbh))
+               {
+                  bgfx::destroy(oldFbh);
+               }
+               // ensure last frame has been sent
+               // otherwise if we reset the bufer twice in a row it breaks
+               bgfx::frame();
+
+               // Re-create with fresh surface pointer
+               SDL_Window* sdlWnd = wnd->GetCore();
+               void* nwh = SDL_GetPointerProperty(SDL_GetWindowProperties(sdlWnd),
+                  SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL);
+               bgfx::FrameBufferHandle newFbh = bgfx::createFrameBuffer(nwh,
+                  uint16_t(wnd->GetPixelWidth()), uint16_t(wnd->GetPixelHeight()),
+                  bgfx::TextureFormat::RGBA8);
+               if (bgfx::isValid(newFbh))
+               {
+                  currentRT->SetCoreFrameBuffer(newFbh);
+                  PLOGW << "Remaining Buffers: ";
+               }
+               else
+               {
+                  PLOGW << "SubmitAndFlipFrame: Wayland failed to recreate framebuffer for '"
+                     << SDL_GetWindowTitle(sdlWnd) << "'";
+               }
+            }
+         }
+      }
+   }
+   #endif
+}
+
+
+
 void RenderDevice::UploadAndSetSMAATextures()
 {
    // TODO use standard BaseTexture / Sampler code instead

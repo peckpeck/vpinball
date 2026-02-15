@@ -146,6 +146,7 @@ public:
 
    void Flip();
    void WaitForVSync(const bool asynchronous);
+   void ResetBuffers();
    float GetPredictedDisplayDelayInS() const;
 
    RenderTarget* GetOutputBackBuffer() const { return m_outputWnd[0]->GetBackBuffer(); } // The screen render target (the only one which is not stereo when doing stereo rendering)

@@ -1418,8 +1418,17 @@ void Player::ProcessOSMessages()
    {
       switch (e.type)
       {
-      case SDL_EVENT_QUIT: SetCloseState(Player::CloseState::CS_STOP_PLAY); break;
       case SDL_EVENT_WINDOW_FOCUS_GAINED:
+         isPFWnd = SDL_GetWindowFromID(e.window.windowID) == m_playfieldWnd->GetCore();
+         OnFocusChanged();
+         if(m_renderer != nullptr) {
+            if(m_renderer->m_renderDevice != nullptr) {
+               m_renderer->m_renderDevice->ResetBuffers();
+            }
+         }
+         break;
+
+      case SDL_EVENT_QUIT: SetCloseState(Player::CloseState::CS_STOP_PLAY); break;
       case SDL_EVENT_WINDOW_FOCUS_LOST:
          isPFWnd = SDL_GetWindowFromID(e.window.windowID) == m_playfieldWnd->GetCore();
          OnFocusChanged();

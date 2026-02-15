@@ -42,6 +42,7 @@ public:
 
 #if defined(ENABLE_BGFX)
    bgfx::FrameBufferHandle GetCoreFrameBuffer() const { return m_framebuffer; }
+   void SetCoreFrameBuffer(const bgfx::FrameBufferHandle fbh) { m_framebuffer = fbh; }
    static void OnFrameFlushed() { current_render_target = nullptr; current_render_layer = 0; }
 #elif defined(ENABLE_OPENGL)
    GLuint GetCoreFrameBuffer() const { return m_framebuffer; }
