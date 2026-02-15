@@ -1716,7 +1716,6 @@ void RenderDevice::ResetBuffers() {
                if (bgfx::isValid(newFbh))
                {
                   currentRT->SetCoreFrameBuffer(newFbh);
-                  PLOGW << "Remaining Buffers: ";
                }
                else
                {

@@ -1418,17 +1418,8 @@ void Player::ProcessOSMessages()
    {
       switch (e.type)
       {
-      case SDL_EVENT_WINDOW_FOCUS_GAINED:
-         isPFWnd = SDL_GetWindowFromID(e.window.windowID) == m_playfieldWnd->GetCore();
-         OnFocusChanged();
-         if(m_renderer != nullptr) {
-            if(m_renderer->m_renderDevice != nullptr) {
-               m_renderer->m_renderDevice->ResetBuffers();
-            }
-         }
-         break;
-
       case SDL_EVENT_QUIT: SetCloseState(Player::CloseState::CS_STOP_PLAY); break;
+      case SDL_EVENT_WINDOW_FOCUS_GAINED:
       case SDL_EVENT_WINDOW_FOCUS_LOST:
          isPFWnd = SDL_GetWindowFromID(e.window.windowID) == m_playfieldWnd->GetCore();
          OnFocusChanged();
@@ -1440,6 +1431,19 @@ void Player::ProcessOSMessages()
          break;
 
       case SDL_EVENT_KEY_UP:
+         isPFWnd = SDL_GetWindowFromID(e.key.windowID) == m_playfieldWnd->GetCore();
+         ShowMouseCursor(false);
+         #if (BX_PLATFORM_LINUX || BX_PLATFORM_BSD) && defined(ENABLE_BGFX)
+            // On wayland after window is first displayed, the main window may receive events without being on focus
+            // So we raise it to make sure it is OK
+            static bool raised_once = false;
+            if(!raised_once && !m_playfieldWnd->IsFocused() && !IsEditorMode()) {
+               m_playfieldWnd->RaiseAndFocus();
+               m_renderer->m_renderDevice->ResetBuffers();
+               raised_once = true;
+            }
+         #endif
+         break;
       case SDL_EVENT_KEY_DOWN:
          isPFWnd = SDL_GetWindowFromID(e.key.windowID) == m_playfieldWnd->GetCore();
          ShowMouseCursor(false);
